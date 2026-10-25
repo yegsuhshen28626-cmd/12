@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>주식회사 백일몽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700&family=Noto+Serif+KR:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
+    --red: #ff1a1a;
+    --white: #f2f2f2;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    color: var(--white);
+  }
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    user-select: none;
+  }
+  .screen.active { display: flex; animation: fadeIn 0.8s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* 0. 로고 인트로 */
+  .emblem {
+    width: min(58vw, 260px);
+    height: auto;
+    opacity: 0;
+    transform: scale(0.94);
+    animation: emblemIn 1.4s ease-out 0.3s forwards;
+  }
+  .logo-text {
+    margin-top: 36px;
+    color: #f2f2f2;
+    font-weight: 300;
+    font-size: clamp(18px, 5vw, 26px);
+    letter-spacing: 0.32em;
+    opacity: 0;
+    animation: textIn 1.6s ease-out 1.6s forwards, twitch 5s steps(1) 3s infinite;
+  }
+  .logo-text .bar { color: #5a5a5a; margin: 0 0.25em; }
+  @keyframes emblemIn {
+    0%   { opacity: 0; transform: scale(0.94); filter: blur(6px); }
+    100% { opacity: 1; transform: scale(1);    filter: blur(0); }
+  }
+  @keyframes textIn {
+    0%   { opacity: 0; letter-spacing: 0.5em; }
+    100% { opacity: 1; letter-spacing: 0.32em; }
+  }
+  @keyframes twitch {
+    0%, 90%, 100% { transform: translateX(0); }
+    91% { transform: translateX(-3px); }
+    93% { transform: translateX(3px); }
+    95% { transform: translateX(0); }
+  }
+
+  /* 1. 봉투 */
+  .env-wrap { position: relative; width: min(78vw, 320px); }
+  .env-wrap svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 18px rgba(255,255,255,0.08)); }
+  .flap { transform-origin: 50% 0; transition: transform 0.9s ease; }
+  .env-wrap.open .flap { transform: rotateX(180deg); }
+  .env-wrap.open { animation: envOut 0.8s ease 0.9s forwards; }
+  @keyframes envOut { to { opacity: 0; transform: scale(1.05); } }
+  .hint {
+    position: absolute;
+    bottom: 12vh;
+    width: 100%;
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    animation: blink 1.6s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* 2. 안내문 */
+  .letter {
+    width: 100%;
+    max-width: 480px;
+    height: 100%;
+    overflow-y: auto;
+    padding: 9vh 7vw 14vh;
+    line-height: 1.8;
+    font-size: 12.5px;
+    font-weight: 300;
+    text-align: left;
+    user-select: text;
+  }
+  .letter .title { font-size: 15px; font-weight: 700; margin: 0; }
+  .letter .sub { color: #999; font-size: 11.5px; margin: 4px 0 20px; }
+  .letter p { margin: 0 0 11px; }
+  .letter b { font-weight: 700; }
+  .letter .rules { margin: 4px 0 12px; padding-left: 0; list-style: none; }
+  .letter .rules li { margin-bottom: 4px; color: #d6d6d6; }
+  .letter .sign { margin-top: 20px; }
+  .letter .note { font-size: 11.5px; color: #aaa; margin-top: 16px; }
+  .letter .next-btn {
+    display: block;
+    margin: 28px auto 0;
+    padding: 10px 26px;
+    background: transparent;
+    color: var(--white);
+    border: 1px solid #555;
+    font: inherit;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+  }
+  .glitch {
+    color: var(--red);
+    font-weight: 700;
+    font-size: 13.5px;
+    animation: jitter 3.2s steps(1) infinite, flicker 2.6s steps(1) infinite;
+    text-shadow: 1.5px 0 rgba(255, 0, 0, 0.8), -1.5px 0 rgba(0, 255, 255, 0.35);
+  }
+  .glitch.flash { animation: none; }
+  @keyframes jitter {
+    0%   { transform: translate(0,0); }
+    7%   { transform: translate(-2px, 0); }
+    8%   { transform: translate(2px, 1px); }
+    9%   { transform: translate(0,0); }
+    52%  { transform: translate(0,0); }
+    53%  { transform: translate(3px, -1px); clip-path: inset(10% 0 40% 0); }
+    54%  { transform: translate(-3px, 1px); clip-path: inset(60% 0 5% 0); }
+    55%  { transform: translate(0,0); clip-path: none; }
+    100% { transform: translate(0,0); }
+  }
+  @keyframes flicker {
+    0%, 18%, 22%, 60%, 100% { opacity: 1; }
+    19%, 21% { opacity: 0.25; }
+    61%      { opacity: 0.55; }
+  }
+
+  /* 3. 문항 */
+  .quiz {
+    width: 100%;
+    max-width: 460px;
+    height: 100%;
+    padding: 8vh 7vw 10vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .quiz-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: #777;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 26px;
+  }
+  .quiz-head .red { color: var(--red); }
+  .q-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.6;
+    margin: 0 0 28px;
+    min-height: 3.2em;
+  }
+  .q-title .num { color: var(--red); }
+  .opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #050505;
+    color: var(--white);
+    border: 1px solid #3a3a3a;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 3em;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .opt:hover, .opt:focus { border-color: #888; outline: none; }
+  .opt:disabled { cursor: default; }
+  .opt.picked { border-color: var(--red); background: #140000; }
+  .opt .mark { color: #555; margin-right: 10px; font-size: 12px; }
+  .q-feedback {
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #d6d6d6;
+    display: none;
+  }
+  .q-feedback.show { display: block; animation: fadeIn 0.6s ease; }
+  .q-feedback .red { color: var(--red); font-weight: 700; }
+  .next-q {
+    display: none;
+    margin-top: 22px;
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--white);
+    border: 1px solid #555;
+    font: inherit;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+  }
+  .next-q.show { display: inline-block; }
+
+  /* 기괴함 단계 */
+  .lv-2 .q-title { animation: flicker 3s steps(1) infinite; }
+  .lv-3 .q-title { animation: jitter 2.4s steps(1) infinite, flicker 2s steps(1) infinite; text-shadow: 1px 0 rgba(255,0,0,0.6), -1px 0 rgba(0,255,255,0.25); }
+  .lv-4 .q-title { color: #ffdede; animation: jitter 1.4s steps(1) infinite, flicker 1.1s steps(1) infinite; text-shadow: 2px 0 rgba(255,0,0,0.8), -2px 0 rgba(0,255,255,0.4); }
+  .lv-4 .opt { animation: jitter 2.2s steps(1) infinite; }
+  .lv-4 .opt:nth-child(even) { animation-delay: 0.7s; }
+  .lv-5 .q-title { color: var(--red); animation: jitter 0.8s steps(1) infinite, flicker 0.6s steps(1) infinite; }
+  .lv-5 .opt { border-color: #5a0000; animation: flicker 1.7s steps(1) infinite; }
+  .lv-5 .opt:nth-child(3) { animation: shiver 0.5s steps(2) infinite; }
+  @keyframes shiver { 50% { transform: translateX(2px); } }
+  .lv-6 .quiz { animation: rolling 0.16s steps(2) infinite; }
+  .lv-6 .q-title { color: var(--red); animation: jitter 0.7s steps(1) infinite, flicker 0.5s steps(1) infinite; }
+  .lv-6 .opt { border-color: #7a0000; }
+  @keyframes rolling { 50% { transform: translateY(1px); } }
+
+  /* 7~10: 글자 깨짐 + 글씨 소실 */
+  .lv-7 .q-title, .lv-8 .q-title, .lv-9 .q-title, .lv-10 .q-title {
+    font-family: "Courier New", "Noto Sans Mono", monospace;
+    letter-spacing: 0.06em;
+    color: var(--red);
+    animation: jitter 0.6s steps(1) infinite, flicker 0.4s steps(1) infinite;
+    text-shadow: 2px 0 rgba(255,0,0,0.9), -2px 0 rgba(0,255,255,0.5);
+  }
+  .lv-7 .opt, .lv-8 .opt, .lv-9 .opt, .lv-10 .opt {
+    font-family: "Courier New", "Noto Sans Mono", monospace;
+    border-color: #6a0000;
+    letter-spacing: 0.04em;
+    animation: shiver 0.4s steps(2) infinite;
+  }
+  .lv-8 .q-title, .lv-9 .q-title, .lv-10 .q-title { font-family: "Noto Sans KR", monospace; }
+  .lv-9 .q-title { letter-spacing: 0.12em; }
+  .lv-9 .opt, .lv-10 .opt { letter-spacing: 0.1em; }
+  .lv-10 .quiz { animation: rolling 0.12s steps(2) infinite; }
+  .lv-10 .q-title { color: #5a0000; }
+  .ghosted { color: transparent !important; text-shadow: none !important; }
+
+  .static {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0 1px, transparent 1px 3px);
+    opacity: 0;
+    z-index: 5;
+  }
+  .static.on { opacity: 1; animation: scan 0.25s steps(2) 5; }
+  @keyframes scan { 50% { transform: translateY(4px); } }
+  .vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(140,0,0,0.75) 100%);
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    z-index: 4;
+  }
+  .vignette.on { opacity: 1; }
+  .blackout {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9;
+  }
+  .ghost {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 14vh;
+    text-align: center;
+    color: #3a0000;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 3;
+    transition: opacity 1.2s ease;
+  }
+  .ghost.on { opacity: 1; }
+
+  /* 종료 */
+  .end {
+    width: 100%;
+    max-width: 460px;
+    padding: 0 8vw;
+    text-align: center;
+    line-height: 2;
+    font-size: 14px;
+    color: #bbb;
+  }
+  .end .big { font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 18px; }
+  .end .red { color: var(--red); font-weight: 700; }
+  .end .faint { color: #555; font-size: 12px; margin-top: 22px; }
+  .end .creepy { animation: jitter 1.2s steps(1) infinite; }
+  .timer { height: 3px; background: #222; margin: -12px 0 22px; }
+  .timer-bar { height: 100%; width: 100%; background: var(--red); }
+  .jump { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 12; background: #000; }
+  .jump.on { display: flex; animation: jflash 0.48s steps(1) 1; }
+  .jtext { color: var(--red); font-size: clamp(44px, 16vw, 96px); font-weight: 700; letter-spacing: 0.08em; text-shadow: 0 0 14px #f00; }
+  @keyframes jflash { 0% { background: #fff; } 12% { background: #000; } 25% { background: #8a0000; } 40% { background: #000; } 60% { background: #fff; } 75% { background: #000; } 100% { background: #000; } }
+  .ending { position: fixed; inset: 0; display: none; z-index: 11; background: #000; overflow: hidden; }
+  .ending.on { display: block; }
+  .ending-main { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(20px, 6vw, 30px); font-weight: 300; letter-spacing: 0.2em; color: #f2f2f2; animation: fadeIn 1s ease; }
+  .ending-main.out { animation: fadeOut 1.5s ease forwards; }
+  .ending-main.red { color: var(--red); font-weight: 700; }
+  @keyframes fadeOut { to { opacity: 0; } }
+  .floaty { position: absolute; margin: 0; color: #e8e8e8; white-space: nowrap; font-size: clamp(16px, 5vw, 26px); text-shadow: 0 0 8px rgba(255,255,255,0.3); animation: popIn 0.35s steps(2) 1 forwards; }
+  .floaty.red { color: var(--red); text-shadow: 0 0 10px #f00; font-weight: 700; }
+  .floaty.whisper { font-size: clamp(12px, 3.5vw, 16px); color: #777; text-shadow: none; }
+  @keyframes popIn { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); } 50% { opacity: 1; } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  .errscreen { position: absolute; inset: 0; z-index: 3; background: #141414; color: #ccc; font-family: 'Courier New', monospace; padding: 12vh 8vw; font-size: 13px; line-height: 1.9; }
+  .errscreen p:first-child { display: inline-block; background: #8a0000; color: #fff; font-size: 16px; font-weight: 700; padding: 2px 8px; }
+  .err-sub { color: #777; }
+  .drips { position: absolute; inset: 0; pointer-events: none; z-index: 2; background: radial-gradient(ellipse at top, transparent 40%, rgba(110,0,0,0.5) 100%); }
+  .drip { position: absolute; top: 0; width: 10px; background: linear-gradient(#4a0000, #a00000); border-radius: 0 0 6px 6px; transform: scaleY(0); transform-origin: top; animation: drip 3s ease-in forwards; }
+  @keyframes drip { to { transform: scaleY(1); } }
+  .ending.finale.on { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .fin-line { font-family: "Noto Serif KR", serif; font-weight: 300; letter-spacing: 0.14em; color: #d8d2c8; font-size: clamp(15px, 4.6vw, 20px); margin: 0 0 22px; text-align: center; opacity: 0; animation: finIn 1.6s ease forwards; }
+  @keyframes finIn { to { opacity: 1; } }
+  .crt { position: fixed; inset: 0; background: #e6e6e6; z-index: 30; animation: crtOff 0.9s ease-in forwards; }
+  @keyframes crtOff { 0% { transform: scale(1, 1); filter: brightness(1); opacity: 1; } 55% { transform: scale(1, 0.012); filter: brightness(2.4); opacity: 1; } 100% { transform: scale(0.012, 0.012); filter: brightness(3); opacity: 0; } }
+  .sms { position: fixed; inset: 0; display: none; z-index: 14; background: rgba(0,0,0,0.82); align-items: flex-start; justify-content: center; padding-top: 10vh; }
+  .sms.on { display: flex; animation: fadeIn 0.4s ease; }
+  .sms-card { width: min(88vw, 360px); background: #1c1c1e; border-radius: 18px; padding: 16px; color: #f2f2f2; font-size: 14px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+  .sms-from { font-size: 12px; color: #8e8e93; margin-bottom: 10px; }
+  .bubble { display: block; width: fit-content; max-width: 80%; padding: 10px 14px; border-radius: 16px; line-height: 1.6; margin: 6px 0; }
+  .bubble.in { background: #2c2c2e; }
+  .bubble.out { background: #0a84ff; margin-left: auto; }
+  .sms-meta { font-size: 11px; color: #8e8e93; text-align: right; margin-top: 4px; }
+  .sms-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .sms-actions button { flex: 1; padding: 12px; border-radius: 12px; border: none; font: inherit; font-size: 14px; background: #2c2c2e; color: #f2f2f2; cursor: pointer; }
+  .sms-actions button:disabled { opacity: 0.35; cursor: default; }
+  .sms-actions .primary { background: #0a84ff; }
+  .fin-line.red { color: var(--red); font-weight: 700; }
+  .dim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 6; transition: opacity 0.08s linear; }
+</style>
+</head>
+<body>
+
+<div class="static" id="static"></div>
+<div class="vignette" id="vignette"></div>
+<div class="blackout" id="blackout"></div>
+<div class="ghost" id="ghost"></div>
+<div class="jump" id="jump"></div>
+<div class="ending" id="ending"></div>
+<div class="sms" id="sms"></div>
+<div class="dim" id="dim"></div>
+
+<!-- 0. 로고 인트로 -->
+<div class="screen active" id="intro">
+  <div>
+    <svg class="emblem" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <polygon points="200,15 385,200 200,385 15,200" fill="#211a17"/>
+      <polygon points="200,38 362,200 200,362 38,200" fill="#ffffff"/>
+      <polygon points="200,62 338,200 200,338 62,200" fill="#211a17"/>
+      <line x1="200" y1="26" x2="374" y2="200" stroke="#c8190f" stroke-width="22"/>
+      <line x1="26" y1="200" x2="200" y2="374" stroke="#f4b92b" stroke-width="22"/>
+      <rect x="165" y="160" width="70" height="80" fill="#ffffff"/>
+      <rect x="165" y="186" width="35" height="4" fill="#211a17"/>
+      <rect x="165" y="209" width="35" height="4" fill="#211a17"/>
+    </svg>
+    <div class="logo-text" id="logoText">주식회사<span class="bar">|</span>백일몽</div>
+  </div>
+</div>
+
+<!-- 1. 봉투 -->
+<div class="screen" id="s1">
+  <div class="env-wrap" id="env">
+    <svg viewBox="0 0 320 226" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="2" y="2" width="316" height="222" rx="2" fill="#e9e6df"/>
+      <path d="M2 224 L160 100 L318 224 Z" fill="#dcd8cf"/>
+      <g class="flap">
+        <path d="M2 2 L160 120 L318 2 Z" fill="#faf9f5"/>
+        <path d="M2 2 L160 120 L318 2" fill="none" stroke="#d3cec3" stroke-width="1"/>
+      </g>
+      <line x1="2" y1="224" x2="112" y2="132" stroke="#d3cec3" stroke-width="1"/>
+      <line x1="318" y1="224" x2="208" y2="132" stroke="#d3cec3" stroke-width="1"/>
+    </svg>
+  </div>
+  <div class="hint">눌러서 여세요</div>
+</div>
+
+<!-- 2. 안내문 -->
+<div class="screen" id="s2">
+  <div class="letter" id="letter">
+    <p class="title">백일몽 주식회사</p>
+    <p class="sub">인사관리부 · 최종 입사 안내</p>
+
+    <p><b>수신: 최종 합격자 귀하</b></p>
+
+    <p>귀하의 백일몽 주식회사 최종 합격을 진심으로 축하드립니다.</p>
+
+    <p>정식 입사에 앞서, 귀하가 당사의 임직원으로 근무하기에 적합한 인재인지 확인하기 위한 <b>온라인 최종 입사 적격성 평가</b>가 진행될 예정입니다.</p>
+
+    <p>시험은 휴대전화를 통해 응시할 수 있으며, 안내된 링크에 접속하여 모든 문항에 답변해 주시기 바랍니다.</p>
+
+    <p class="glitch" id="glitchLine">최종 평가가 종료되기 전까지 귀하는 합격자가 아닌, 합격 예정자입니다.</p>
+
+    <p><b>[시험 응시 유의사항]</b></p>
+    <ol class="rules">
+      <li>1. 시험 도중 페이지를 이탈하거나 휴대전화의 전원을 임의로 차단하지 마십시오.</li>
+      <li>2. 본인의 이름과 다른 이름이 화면에 표시되더라도 당황하지 마십시오.</li>
+      <li>3. 문항에 존재하지 않는 선택지가 보이더라도 반드시 하나를 선택하십시오.</li>
+      <li>4. 시험 종료 안내가 표시되기 전까지 화면을 벗어나지 마십시오.</li>
+    </ol>
+
+    <p>본 평가에는 일반적인 직무 적성 외에도 별도의 확인 절차가 포함되어 있습니다.</p>
+
+    <p>평가 도중 발생하는 상황은 모두 정상적인 시험 과정의 일부입니다.</p>
+
+    <p><b>귀하가 경험한 일을 다른 사람에게 확인하려 하지 마십시오.</b></p>
+
+    <p>평가가 종료되면 합격 여부를 개별 통보해 드리겠습니다.</p>
+
+    <p>귀하의 입사를 진심으로 기대합니다.</p>
+
+    <p>감사합니다.</p>
+
+    <p class="sign">백일몽 주식회사 인사관리부 드림.</p>
+
+    <p class="note">※ <b>시험이 시작된 이후에는 응시자의 신원을 변경할 수 없습니다.</b></p>
+
+    <button class="next-btn" id="toQuiz">시험 시작</button>
+  </div>
+</div>
+
+<!-- 3. 문항 (JS로 생성) -->
+<div class="screen" id="s3">
+  <div class="quiz" id="quiz">
+    <div class="quiz-head">
+      <span>입사 적격성 평가</span>
+      <span class="red" id="progress"></span>
+    </div>
+    <div class="timer"><div class="timer-bar" id="timerBar"></div></div>
+    <p class="q-title" id="qTitle"></p>
+    <div id="options"></div>
+    <div class="q-feedback" id="feedback"></div>
+    <button class="next-q" id="nextQ">다음 문제</button>
+  </div>
+</div>
+
+<!-- 4. 종료 -->
+<div class="screen" id="s4">
+  <div class="end" id="endBox"></div>
+</div>
+
+<script>
+  // 정답과 오답은 표시하지 않습니다. lv가 높을수록 글자가 깨지고 사라집니다.
+  const QUESTIONS = [
+    {
+      lv: 1,
+      q: "직장 내 원활한 협업을 위해 가장 중요한 태도는 무엇입니까?",
+      opts: ["동료의 의견을 경청한다.", "개인의 업무만 우선시한다.", "갈등이 생기면 책임을 회피한다.", "상사의 지시를 무조건 거부한다."],
+      fb: "응답이 기록되었습니다.<br><span class='red'>다음 문제는 잘 풀어주세요.</span>"
+    },
+    {
+      lv: 1,
+      q: "회의에서 본인의 의견과 다른 결정이 내려졌을 때 가장 적절한 행동은 무엇입니까?",
+      opts: ["결정을 존중하고 실행에 최선을 다한다.", "회의가 끝난 뒤 다른 사람에게 불만을 말한다.", "결정된 일정을 임의로 바꾼다.", "관련 자료를 정리해 결정을 되돌리려 한다."],
+      fb: "응답이 기록되었습니다.<br>당신이 고른 답은 이 회사에서 가장 먼저 사라진 답입니다."
+    },
+    {
+      lv: 2,
+      q: "업무 보고서에서 실수를 발견했을 때 가장 먼저 해야 할 일은 무엇입니까?",
+      opts: ["즉시 수정하고 관련자에게 공유한다.", "누군가 먼저 발견할 때까지 기다린다.", "이전 담당자의 실수로 돌린다.", "보고서를 처음부터 다시 작성한다."],
+      fb: "응답이 기록되었습니다.<br>정답이 있었던 자리는 지금 비어 있습니다."
+    },
+    {
+      lv: 3,
+      q: "퇴근 시간이 지난 뒤, 아무도 없는 사무실에서 누군가 키보드를 치는 소리가 들립니다. 당신은?",
+      opts: ["조용히 짐을 챙겨 퇴근한다.", "소리가 나는 쪽을 향해 인사한다.", "사무실 불을 끄고 빠르게 나간다.", "소리가 멈출 때까지 자리에 앉아 기다린다."],
+      fb: "응답이 기록되었습니다.<br>키보드 소리는 아직 멈추지 않았습니다. <span class='red'>계속 응시해 주십시오.</span>"
+    },
+    {
+      lv: 4,
+      q: "당신의 자리에 놓인 서류의 글씨가 어제와 조금 다릅니다. 당신이 가장 먼저 하는 일은?",
+      opts: ["어제 서류의 글씨를 기억해 둔다.", "서류를 그대로 제출한다.", "다른 글씨를 따라 같이 고쳐 쓴다.", "이 질문에 답하지 않는다."],
+      fb: "응답이 기록되었습니다.<br>누군가 당신의 답을 대신 고쳐 적었습니다.<br><span class='red'>응시자 번호 0이 당신을 기억합니다.</span>"
+    },
+    {
+      lv: 5,
+      q: "출근 기록에 당신과 같은 이름을 가진 사람이 이미 출근해 있습니다. 그 사람은 아직 이 건물에 들어온 적이 없습니다. 당신은?",
+      opts: ["기록의 정정을 요청한다.", "그 사람을 찾아가 인사한다.", "그 사람이 먼저 퇴근하기를 기다린다.", "기록을 지우지 않고 그대로 둔다."],
+      fb: "응답이 기록되었습니다.<br>기록에 남아 있던 이름이 조금 더 가까워졌습니다.<br><span class='red'>이 평가에는 정답이 없습니다.</span>"
+    },
+    {
+      lv: 6,
+      q: "지금 이 화면을 보고 있는 당신의 모습이 누군가의 화면에도 똑같이 나타나고 있습니다. 당신은 어디에 있습니까?",
+      opts: ["사무실", "집", "아직 출근하지 않았다", "이미 퇴근했지만 돌아갈 수 없다"],
+      fb: "응답이 기록되었습니다.<br>응시자 번호가 <span class='red'>0</span>으로 변경되었습니다.<br>화면은 이미 꺼져 있습니다."
+    },
+    {
+      lv: 7,
+      q: "이 시험의 문항을 읽을 수 없게 된 지 얼마나 되었습니까?",
+      opts: ["방금 전부터", "처음부터 읽을 수 없었다", "읽을 수 있었던 적이 없다", "이 선택지도 읽고 있지 않다"],
+      fb: "응답이 기록되었습니다.<br>글자가 없어도 선택은 기록됩니다.<br><span class='red'>계속 응시해 주십시오.</span>"
+    },
+    {
+      lv: 8,
+      q: "당신이 방금 고른 답은 어디에 적혀 있었습니까? 그 자리는 지금 누구의 것입니까?",
+      opts: ["■■ ■■■■", "▒▒ 기록 ▒▒", "ㅁㅁ 이름 ㅁㅁ", "당신이 아닌 쪽"],
+      fb: "응답이 기록되었습니다.<br><span class='red'>그 자리는 원래 비어 있었습니다.</span><br>문장을 읽을 필요는 없습니다."
+    },
+    {
+      lv: 9,
+      q: "███ ▒▒▒ 이 ░░░ 문항은 ▓▓ 읽히지 ■■ 않습니다. 그래도 하나를 고르십시오.",
+      opts: ["█████", "░ ░ ░", "▒▒▒▒", "……"],
+      fb: "응답이 기록되었습니다.<br><span class='red'>당신이 고른 것은 문장이 아니라 당신 자신입니다.</span>"
+    },
+    {
+      lv: 10,
+      q: "당신은 지금 이 문항을 읽고 있습니까?",
+      opts: ["예", "아니오", "이미 읽었다", "당신은 누구입니까"],
+      fb: "응답이 모두 제출되었습니다.<br><span class='red'>뒤를 돌아보지 마십시오.</span><br>당신의 응답은 이미 다른 사람의 것입니다."
+    }
+  ];
+
+  const screens = {
+    intro: document.getElementById("intro"),
+    s1: document.getElementById("s1"),
+    s2: document.getElementById("s2"),
+    s3: document.getElementById("s3"),
+    s4: document.getElementById("s4"),
+  };
+  const staticEl = document.getElementById("static");
+  const vignette = document.getElementById("vignette");
+  const blackout = document.getElementById("blackout");
+  const ghost = document.getElementById("ghost");
+
+  function show(name) {
+    Object.values(screens).forEach((el) => {
+      el.classList.remove("active");
+      el.style.display = "none";
+    });
+    const next = screens[name];
+    next.style.display = "flex";
+    next.classList.add("active");
+  }
+
+  function scanFlash() {
+    staticEl.classList.remove("on");
+    void staticEl.offsetWidth;
+    staticEl.classList.add("on");
+  }
+
+  function blink(ms = 180) {
+    blackout.style.opacity = "1";
+    setTimeout(() => (blackout.style.opacity = "0"), ms);
+  }
+
+  // 소리 (사용자 탭 이후에만 재생)
+  let audioCtx = null;
+  function getCtx() {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function crackle(duration = 0.35, volume = 0.25) {
+    try {
+      const ctx = getCtx();
+      const len = ctx.sampleRate * duration;
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        const env = Math.pow(1 - i / len, 2);
+        data[i] = (Math.random() * 2 - 1) * env * (Math.random() > 0.85 ? 1 : 0.15);
+      }
+      const src = ctx.createBufferSource();
+      const gain = ctx.createGain();
+      gain.gain.value = volume;
+      src.buffer = buf;
+      src.connect(gain).connect(ctx.destination);
+      src.start();
+    } catch (e) {}
+  }
+  function heartbeat() {
+    try {
+      const ctx = getCtx();
+      [0, 0.22].forEach((t) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.frequency.value = 45;
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+        g.gain.exponentialRampToValueAtTime(0.9, ctx.currentTime + t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.16);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(ctx.currentTime + t);
+        osc.stop(ctx.currentTime + t + 0.18);
+      });
+    } catch (e) {}
+  }
+
+  // 글자 깨짐 (원래 문장을 저장해 두고 잠깐 바꿨다가 되돌림)
+  const GLITCH_CHARS = "▒░▓█ㅁ□■ㆍ?#@%&ㄱㄴㄷ※◆◇";
+  function corrupt(text, ratio) {
+    return [...text].map((c) => {
+      if (c === " " || c === "<" || c === ">") return c;
+      return Math.random() < ratio ? GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)] : c;
+    }).join("");
+  }
+
+  // 0 → 1
+  let introDone = false;
+  function finishIntro() {
+    if (introDone) return;
+    introDone = true;
+    show("s1");
+    envHidden = setTimeout(() => { if (!envOpened) showHidden(); }, 10000);
+  }
+  setTimeout(finishIntro, 4500);
+  screens.intro.addEventListener("click", finishIntro);
+
+  // 1 → 2
+  let envOpened = false;
+  screens.s1.addEventListener("click", () => {
+    if (envOpened) return;
+    envOpened = true;
+    clearTimeout(envHidden);
+    document.getElementById("env").classList.add("open");
+    crackle(0.2);
+    setTimeout(() => show("s2"), 1700);
+  });
+
+  // 붉은 문장이 보이면 지지직 효과
+  const glitchLine = document.getElementById("glitchLine");
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        crackle(0.4);
+        let n = 0;
+        const timer = setInterval(() => {
+          glitchLine.classList.toggle("flash");
+          glitchLine.style.opacity = Math.random() > 0.5 ? "0.4" : "1";
+          if (++n > 8) {
+            clearInterval(timer);
+            glitchLine.classList.remove("flash");
+            glitchLine.style.opacity = "";
+          }
+        }, 90);
+        io.disconnect();
+      }
+    });
+  }, { root: document.getElementById("letter"), threshold: 0.9 });
+  io.observe(glitchLine);
+
+  // 2 → 3
+  document.getElementById("toQuiz").addEventListener("click", (e) => {
+    e.stopPropagation();
+    show("s3");
+    renderQuestion(0);
+  });
+
+  // 문항 렌더링
+  let current = 0;
+  let answered = false;
+  let timers = [];
+  const quizEl = document.getElementById("quiz");
+  const optionsEl = document.getElementById("options");
+  const feedbackEl = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextQ");
+  const titleEl = document.getElementById("qTitle");
+
+  let scareToken = 0;
+  let timerInterval = null;
+  let droneNodes = null;
+  const JUMP_TEXTS = ["뒤", "0", "기록 중", "아무도 없습니다", "당신 뒤에 있습니다", "여기"];
+
+  function jumpScare() {
+    const j = document.getElementById("jump");
+    j.innerHTML = Math.random() < 0.5 ? EYE_SVG : "<div class='jtext'>" + JUMP_TEXTS[Math.floor(Math.random() * JUMP_TEXTS.length)] + "</div>";
+    j.className = "jump on";
+    screech(0.5);
+    setTimeout(() => { j.className = "jump"; }, 480);
+  }
+
+  function scheduleScares(lv) {
+    if (lv < 3) return;
+    const token = ++scareToken;
+    const minD = lv >= 7 ? 4000 : lv >= 5 ? 7000 : 10000;
+    const maxD = lv >= 7 ? 8000 : lv >= 5 ? 12000 : 16000;
+    const loop = () => {
+      setTimeout(() => {
+        if (token !== scareToken) return;
+        jumpScare();
+        loop();
+      }, minD + Math.random() * (maxD - minD));
+    };
+    loop();
+  }
+
+  function startTimer(item) {
+    const total = Math.max(8, Math.round(15 - current * 0.7));
+    const bar = document.getElementById("timerBar");
+    bar.style.transition = "none";
+    bar.style.width = "100%";
+    void bar.offsetWidth;
+    bar.style.transition = "width 0.1s linear";
+    let left = total * 10;
+    timerInterval = setInterval(() => {
+      left--;
+      bar.style.width = (left / (total * 10) * 100) + "%";
+      if (left <= 30 && left % 5 === 0) heartbeat();
+      if (left === 0) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        if (!answered) showSMS();
+      }
+    }, 100);
+    timers.push(timerInterval);
+  }
+
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  }
+
+  function autoPick(item) {
+    const btns = [...optionsEl.querySelectorAll(".opt")];
+    const b = btns[Math.floor(Math.random() * btns.length)];
+    if (!b) return;
+    pick(b, item);
+    setTimeout(() => {
+      feedbackEl.innerHTML = "<span class='red'>시간이 초과되었습니다. 응답이 자동으로 기록되었습니다.</span><br>" + feedbackEl.innerHTML;
+    }, 520);
+  }
+
+  function startDrone() {
+    if (droneNodes) return;
+    try {
+      const ctx = getCtx();
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      g.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 2);
+      g.connect(ctx.destination);
+      const o1 = ctx.createOscillator(); o1.type = "sawtooth"; o1.frequency.value = 41;
+      const o2 = ctx.createOscillator(); o2.type = "sawtooth"; o2.frequency.value = 43.5;
+      o1.connect(g); o2.connect(g); o1.start(); o2.start();
+      droneNodes = { g, o1, o2 };
+    } catch (e) {}
+  }
+
+  function stopDrone() {
+    if (!droneNodes) return;
+    const { g, o1, o2 } = droneNodes;
+    try {
+      const t = getCtx().currentTime;
+      g.gain.linearRampToValueAtTime(0, t + 1.5);
+      o1.stop(t + 1.6); o2.stop(t + 1.6);
+    } catch (e) {}
+    droneNodes = null;
+  }
+
+  function screech(vol = 0.3) {
+    try {
+      const ctx = getCtx();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "square";
+      o.frequency.setValueAtTime(1800, ctx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(700, ctx.currentTime + 0.45);
+      g.gain.setValueAtTime(vol * 0.4, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      o.stop(ctx.currentTime + 0.46);
+    } catch (e) {}
+    crackle(0.45, vol * 0.8);
+  }
+
+  function clearTimers() {
+    scareToken++;
+    const dimEl = document.getElementById("dim");
+    if (dimEl) dimEl.style.opacity = "0";
+    timers.forEach((t) => { clearInterval(t); clearTimeout(t); });
+    timers = [];
+    stopTimer();
+  }
+
+  function renderQuestion(idx) {
+    const item = QUESTIONS[idx];
+    answered = false;
+    current = idx;
+    smsShown = false;
+    document.getElementById("sms").className = "sms";
+    clearTimers();
+    startDrone();
+    startTimer(item);
+    scheduleScares(item.lv);
+    startAmbience(idx);
+
+    quizEl.className = "quiz" + (item.lv >= 2 ? " lv-" + item.lv : "");
+    document.getElementById("progress").textContent = (idx + 1) + " / " + QUESTIONS.length;
+    const qText = item.q;
+    titleEl.innerHTML = "<span class='num'>Q" + (idx + 1) + ".</span> " + qText;
+
+    optionsEl.innerHTML = "";
+    item.opts.forEach((text, i) => {
+      const btn = document.createElement("button");
+      btn.className = "opt";
+      btn.dataset.text = text;
+      btn.innerHTML = "<span class='mark'>" + ["①", "②", "③", "④"][i] + "</span><span class='otext'>" + text + "</span>";
+      btn.addEventListener("click", () => pick(btn, item));
+      optionsEl.appendChild(btn);
+    });
+
+    feedbackEl.classList.remove("show");
+    feedbackEl.innerHTML = "";
+    nextBtn.classList.remove("show");
+
+    // 단계별 연출
+    if (item.lv >= 3) scanFlash();
+    if (item.lv >= 4) vignette.classList.add("on");
+
+    if (item.lv >= 4 && item.lv < 7) {
+      timers.push(setInterval(() => {
+        if (Math.random() > 0.6) {
+          titleEl.querySelector(".num") ;
+          const span = titleEl;
+          const original = qText;
+          span.innerHTML = "<span class='num'>Q" + (idx + 1) + ".</span> " + corrupt(original, 0.08);
+          setTimeout(() => (span.innerHTML = "<span class='num'>Q" + (idx + 1) + ".</span> " + original), 220);
+        }
+      }, 2400));
+    }
+
+    // 7 이상: 글자 깨짐과 소실이 강해짐
+    if (item.lv >= 7) {
+      const ratio = item.lv >= 9 ? 0.45 : item.lv >= 8 ? 0.3 : 0.18;
+      timers.push(setInterval(() => {
+        titleEl.innerHTML = "<span class='num'>Q" + (idx + 1) + ".</span> " + corrupt(qText, ratio);
+        setTimeout(() => (titleEl.innerHTML = "<span class='num'>Q" + (idx + 1) + ".</span> " + qText), 160 + Math.random() * 200);
+        optionsEl.querySelectorAll(".opt").forEach((b) => {
+          if (Math.random() < ratio) {
+            b.querySelector(".otext").textContent = corrupt(b.dataset.text, 0.5);
+            setTimeout(() => (b.querySelector(".otext").textContent = b.dataset.text), 180);
+          }
+        });
+      }, item.lv >= 9 ? 700 : 1100));
+
+      // 선택지 글씨가 통째로 사라졌다 돌아옴
+      timers.push(setInterval(() => {
+        const btns = [...optionsEl.querySelectorAll(".opt")];
+        const target = btns[Math.floor(Math.random() * btns.length)];
+        if (target) {
+          target.classList.add("ghosted");
+          setTimeout(() => target.classList.remove("ghosted"), 500 + Math.random() * 600);
+        }
+      }, item.lv >= 9 ? 900 : 1600));
+    }
+
+    if (item.lv >= 5) {
+      timers.push(setInterval(() => { if (Math.random() > 0.5) blink(120); }, 3000));
+      timers.push(setInterval(heartbeat, 1400));
+    }
+    if (item.lv >= 6) {
+      timers.push(setInterval(() => { blink(260); crackle(0.25, 0.3); }, 2200));
+      ghost.textContent = item.lv >= 9 ? "아무도 이 화면을 끄지 않았습니다. 글자는 당신이 만들고 있습니다." : "아무도 이 화면을 끄지 않았습니다";
+      ghost.classList.add("on");
+      setTimeout(() => ghost.classList.remove("on"), 4000);
+    }
+    if (item.lv >= 3) crackle(0.5, 0.3);
+  }
+
+  function pick(btn, item) {
+    if (answered) return;
+    answered = true;
+    stopTimer();
+    btn.classList.add("picked");
+    btn.classList.remove("ghosted");
+    optionsEl.querySelectorAll(".opt").forEach((b) => (b.disabled = true));
+    crackle(0.15);
+    blink(120);
+    setTimeout(() => {
+      feedbackEl.innerHTML = item.fb;
+      feedbackEl.classList.add("show");
+      nextBtn.textContent = current + 1 < QUESTIONS.length ? "다음 문제" : "시험 종료";
+      nextBtn.classList.add("show");
+    }, 500);
+  }
+
+  nextBtn.addEventListener("click", () => {
+    if (current + 1 < QUESTIONS.length) {
+      renderQuestion(current + 1);
+    } else {
+      endSequence3();
+    }
+  });
+
+  function eerie(dur = 2) {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(220, t);
+      o.frequency.exponentialRampToValueAtTime(60, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.18, t + 0.3);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + dur + 0.05);
+      const o2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      o2.type = "sawtooth";
+      o2.frequency.setValueAtTime(233, t + 0.1);
+      o2.frequency.linearRampToValueAtTime(190, t + dur);
+      g2.gain.value = 0.04;
+      o2.connect(g2).connect(ctx.destination);
+      o2.start(t + 0.1);
+      o2.stop(t + dur);
+      crackle(dur * 0.6, 0.15);
+    } catch (e) {}
+  }
+
+  function addFloat(box, text, seed, whisper = false) {
+    const p = document.createElement("p");
+    p.className = "floaty" + (whisper ? " whisper" : (Math.random() > 0.6 ? " red" : ""));
+    p.textContent = text;
+    p.style.left = (15 + Math.random() * 70) + "%";
+    p.style.top = (12 + Math.random() * 76) + "%";
+    p.style.transform = "translate(-50%, -50%) rotate(" + ((Math.random() - 0.5) * 24) + "deg) skewX(" + ((Math.random() - 0.5) * 30) + "deg)";
+    const fonts = ["'Noto Sans KR', sans-serif", "serif", "'Courier New', monospace", "Georgia, serif", "cursive", "fantasy"];
+    p.style.fontFamily = fonts[Math.floor(Math.random() * fonts.length)];
+    p.style.fontSize = (12 + Math.random() * 22) + "px";
+    p.style.marginTop = ((Math.random() - 0.5) * 20) + "px";
+    box.appendChild(p);
+  }
+
+  // 마지막 연출: 시험 수고 → 암전 → "집으로 돌아갈 수 있을 것 같아?" 반복
+  function darkBgm(dur) {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.09, t + 3);
+      g.gain.exponentialRampToValueAtTime(0.09, t + dur - 2);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      g.connect(ctx.destination);
+      const lfo = ctx.createOscillator();
+      lfo.frequency.value = 0.35;
+      const lfoG = ctx.createGain();
+      lfoG.gain.value = 0.03;
+      lfo.connect(lfoG).connect(g.gain);
+      lfo.start(t);
+      lfo.stop(t + dur);
+      [55, 58.3, 82.4].forEach((f, i) => {
+        const o = ctx.createOscillator();
+        o.type = i === 2 ? "triangle" : "sine";
+        o.frequency.value = f;
+        o.connect(g);
+        o.start(t);
+        o.stop(t + dur);
+      });
+    } catch (e) {}
+  }
+
+  function flatline(dur = 1.4) {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = 1000;
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.linearRampToValueAtTime(0.12, t + dur - 0.1);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + dur + 0.05);
+    } catch (e) {}
+  }
+
+  function heartAccel(startMs, endMs, durationMs) {
+    const t0 = Date.now();
+    const step = () => {
+      const p = Math.min(1, (Date.now() - t0) / durationMs);
+      heartbeat();
+      if (p < 1) heartTimer = setTimeout(step, startMs + (endMs - startMs) * p);
+    };
+    step();
+  }
+
+  function freezeError(box) {
+    const e = document.createElement("div");
+    e.className = "errscreen";
+    e.innerHTML = "<p>치명적 오류</p><p>응시자 정보를 불러올 수 없습니다.</p><p>0x00000000 · 0x00000000 · 0x00000000</p><p class='err-sub'>화면을 멈쵥니다. 잠시만 기다리십시오.</p>";
+    box.appendChild(e);
+    flatline(1.6);
+    setTimeout(() => e.remove(), 2400);
+  }
+
+  function bloodDrips(box) {
+    const wrap = document.createElement("div");
+    wrap.className = "drips";
+    for (let i = 0; i < 14; i++) {
+      const d = document.createElement("div");
+      d.className = "drip";
+      d.style.left = (Math.random() * 100) + "%";
+      d.style.height = (30 + Math.random() * 60) + "%";
+      d.style.animationDelay = (Math.random() * 1.2) + "s";
+      wrap.appendChild(d);
+    }
+    box.appendChild(wrap);
+    setTimeout(() => wrap.remove(), 6000);
+  }
+
+  // 느린 심장 박동 → 점점 빠르게, 중간 오류 화면, 피 흑려지는 연출이 포함된 최종 연출
+  let seqToken = 0;
+  let hissTimer = null;
+  let finaleDone = false;
+  const EYE_SVG = "<svg viewBox='0 0 300 160' width='82%' style='display:block;margin:auto'><path d='M10 80 Q150 -20 290 80 Q150 180 10 80Z' fill='#000' stroke='#ddd' stroke-width='3'/><circle cx='150' cy='80' r='42' fill='#8a0000'/><circle cx='150' cy='80' r='16' fill='#000'/></svg>";
+
+  function popEye() {
+    const j = document.getElementById("jump");
+    j.innerHTML = EYE_SVG;
+    j.className = "jump on";
+    screech(0.4);
+    setTimeout(() => { j.className = "jump"; }, 420);
+  }
+
+  // 문제가 진행될수록 치직거림·어두움 깜박임이 심해짐
+  function startAmbience(idx) {
+    const level = idx / (QUESTIONS.length - 1);
+    const dimEl = document.getElementById("dim");
+    dimEl.style.opacity = "0";
+    timers.push(setInterval(() => {
+      dimEl.style.opacity = String(Math.random() < 0.5 ? 0 : Math.random() * (0.2 + level * 0.6));
+    }, 200 - level * 110));
+    timers.push(setInterval(() => {
+      if (Math.random() < 0.3 + level * 0.6) crackle(0.25 + level * 0.2, 0.08 + level * 0.14);
+    }, 700 - level * 400));
+    timers.push(setInterval(() => {
+      if (Math.random() < level) blink(90 + level * 140);
+    }, 1600));
+  }
+
+  let smsShown = false;
+  function showSMS() {
+    if (smsShown) return;
+    smsShown = true;
+    stopTimer();
+    const sms = document.getElementById("sms");
+    sms.innerHTML = "";
+    const card = document.createElement("div");
+    card.className = "sms-card";
+    card.innerHTML = "<div class='sms-from'>초자연재난관리국 · 지금</div><div class='bubble in'>도움이 필요하십니까?</div><div class='sms-actions'></div>";
+    const acts = card.querySelector(".sms-actions");
+    const read = document.createElement("button");
+    read.textContent = "읽음";
+    read.addEventListener("click", () => { clearTimeout(hiddenTimer); sms.className = "sms"; });
+    const reply = document.createElement("button");
+    reply.className = "primary";
+    reply.textContent = "답장";
+    reply.addEventListener("click", () => {
+      card.innerHTML = "<div class='sms-from'>초자연재난관리국 · 지금</div><div class='bubble in'>도움이 필요하십니까?</div><div class='bubble out'>네</div><div class='sms-meta'>읽음 · 방금</div>";
+      clearTimeout(hiddenTimer);
+      hardStop();
+    });
+    acts.appendChild(read);
+    acts.appendChild(reply);
+    sms.appendChild(card);
+    sms.className = "sms on";
+    crackle(0.3, 0.2);
+  }
+
+  // 답장 "네"이면 즉시 강제 종료
+  function forceEnd() {
+    seqToken++;
+    scareToken++;
+    clearTimers();
+    stopDrone();
+    clearTimeout(heartTimer);
+    clearInterval(hissTimer);
+    document.getElementById("sms").className = "sms";
+    const box = document.getElementById("ending");
+    box.innerHTML = "";
+    box.className = "ending on finale";
+    try { if (audioCtx) audioCtx.close(); } catch (e) {}
+    audioCtx = null;
+    blink(200);
+    setTimeout(() => {
+      const lines = ["무사히 돌아가십시오. 시민님.", "외부 개입으로 인해 강제 종료합니다."];
+      lines.forEach((text, i) => {
+        setTimeout(() => {
+          const p = document.createElement("p");
+          p.className = "fin-line" + (i === 1 ? " red" : "");
+          p.textContent = text;
+          box.appendChild(p);
+        }, i * 2400);
+      });
+    }, 700);
+  }
+
+  // 답장 "네" 이후 강제 종료 (화면을 먼저 정리하고 문구를 한 줄씩 띄움)
+  function forceEnd2() {
+    try {
+      seqToken++;
+      scareToken++;
+      finaleDone = true;
+      clearTimers();
+      clearTimeout(heartTimer);
+      clearInterval(hissTimer);
+      stopDrone();
+      try { if (audioCtx) audioCtx.close(); } catch (e) {}
+      audioCtx = null;
+      ["intro", "s1", "s2", "s3", "s4"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.remove("active");
+          el.style.display = "none";
+        }
+      });
+      const sms = document.getElementById("sms");
+      sms.className = "sms";
+      sms.style.display = "none";
+      const box = document.getElementById("ending");
+      box.innerHTML = "";
+      box.className = "ending on finale";
+      blink(200);
+      const lines = ["무사히 돌아가십시오. 시민님.", "외부 계입으로 인해 강제 종료합니다."];
+      lines.forEach((text, i) => {
+        setTimeout(() => {
+          const p = document.createElement("p");
+          p.className = "fin-line" + (i === 1 ? " red" : "");
+          p.textContent = text;
+          box.appendChild(p);
+        }, 900 + i * 2400);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  let heartTimer = null;
+  function hardStop() {
+    try {
+      seqToken++;
+      scareToken++;
+      clearTimers();
+      clearTimeout(heartTimer);
+      clearInterval(hissTimer);
+      try { if (audioCtx) audioCtx.close(); } catch (e) {}
+      audioCtx = null;
+      const black = document.createElement("div");
+      black.style.cssText = "position:fixed;inset:0;background:#000;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:0 8vw;";
+      document.body.appendChild(black);
+      const lines = ["무사히 돌아가십시오. 시민님."];
+      lines.forEach((text, i) => {
+        const p = document.createElement("p");
+        p.textContent = text;
+        p.style.cssText = "margin:0;opacity:0;transition:opacity 1.6s ease;text-align:center;font-family:'Noto Serif KR', serif;letter-spacing:0.12em;font-size:18px;color:" + (i === 1 ? "#ff1a1a;font-weight:700;" : "#e6e0d6;font-weight:300;");
+        black.appendChild(p);
+        setTimeout(() => { p.style.opacity = "1"; }, 1200 + i * 2400);
+      });
+      setTimeout(() => {
+        const warn = document.createElement("div");
+        warn.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(84vw,340px);border:2px solid #ff1a1a;background:#0a0000;padding:20px 18px;text-align:center;box-shadow:0 0 24px rgba(255,0,0,0.35);z-index:51;opacity:0;transition:opacity 0.5s ease;";
+        const head = document.createElement("div");
+        head.textContent = "⚠ 경고";
+        head.style.cssText = "color:#ff1a1a;font-size:12px;letter-spacing:0.2em;margin-bottom:10px;font-weight:700;";
+        const body = document.createElement("div");
+        body.textContent = "외부 개입으로 인해 강제 종료합니다.";
+        body.style.cssText = "color:#ff1a1a;font-size:17px;font-weight:700;line-height:1.7;";
+        warn.appendChild(head);
+        warn.appendChild(body);
+        document.body.appendChild(warn);
+        requestAnimationFrame(() => { warn.style.opacity = "1"; });
+        screech(0.3);
+        setTimeout(() => {
+          const crt = document.createElement("div");
+          crt.className = "crt";
+          crt.style.zIndex = "60";
+          document.body.appendChild(crt);
+          tvOff();
+          setTimeout(() => { warn.style.opacity = "0"; }, 500);
+          black.querySelectorAll("p").forEach((el) => { el.style.transition = "opacity 0.4s ease"; el.style.opacity = "0"; });
+        }, 2600);
+      }, 4000);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function laugh() {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      for (let k = 0; k < 6; k++) {
+        const st = t + k * 0.2;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sawtooth";
+        o.frequency.setValueAtTime(260 + Math.random() * 60, st);
+        o.frequency.exponentialRampToValueAtTime(140, st + 0.16);
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(0.14, st + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.17);
+        o.connect(g).connect(ctx.destination);
+        o.start(st);
+        o.stop(st + 0.2);
+      }
+      crackle(1.3, 0.08);
+    } catch (e) {}
+  }
+
+  function scream() {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      const vib = ctx.createOscillator();
+      const vg = ctx.createGain();
+      o.type = "sawtooth";
+      o.frequency.setValueAtTime(500, t);
+      o.frequency.exponentialRampToValueAtTime(1400, t + 0.5);
+      o.frequency.exponentialRampToValueAtTime(900, t + 1.1);
+      vib.frequency.value = 9;
+      vg.gain.value = 60;
+      vib.connect(vg).connect(o.frequency);
+      vib.start(t);
+      vib.stop(t + 1.2);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.22, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 1.25);
+      crackle(0.8, 0.2);
+    } catch (e) {}
+  }
+
+  function tvOff() {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(15000, t);
+      o.frequency.exponentialRampToValueAtTime(60, t + 0.9);
+      g.gain.setValueAtTime(0.12, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.95);
+      o.connect(g).connect(ctx.destination);
+      o.start(t);
+      o.stop(t + 1);
+      const n = ctx.createOscillator();
+      const ng = ctx.createGain();
+      n.type = "square";
+      n.frequency.value = 60;
+      ng.gain.setValueAtTime(0.0001, t + 0.85);
+      ng.gain.exponentialRampToValueAtTime(0.25, t + 0.9);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      n.connect(ng).connect(ctx.destination);
+      n.start(t + 0.85);
+      n.stop(t + 1.15);
+    } catch (e) {}
+  }
+
+  // 숨은 "네" 4개를 누르면 음악이 끊기고 마지막 연출으로 넘어감
+  function endingFinale() {
+    if (finaleDone) return;
+    finaleDone = true;
+    seqToken++;
+    clearTimeout(heartTimer);
+    clearInterval(hissTimer);
+    const box = document.getElementById("ending");
+    box.innerHTML = "";
+    box.className = "ending on finale";
+    try { if (audioCtx) audioCtx.close(); } catch (e) {}
+    audioCtx = null;
+    blink(150);
+
+    setTimeout(() => {
+      try {
+        const ctx = getCtx();
+        const t = ctx.currentTime;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = 330;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.05, t + 2.5);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 14);
+        o.connect(g).connect(ctx.destination);
+        o.start(t);
+        o.stop(t + 14.1);
+      } catch (e) {}
+    }, 900);
+
+    const lines = ["...", "감사합니다.", "사원님도 집으로 돌아가셔야죠.", "다시는 여기에 안 오시길 바랍니다."];
+    lines.forEach((text, i) => {
+      setTimeout(() => {
+        const p = document.createElement("p");
+        p.className = "fin-line";
+        p.textContent = text;
+        box.appendChild(p);
+      }, 1800 + i * 2000);
+    });
+
+    setTimeout(() => {
+      const crt = document.createElement("div");
+      crt.className = "crt";
+      document.body.appendChild(crt);
+      tvOff();
+      setTimeout(() => { box.innerHTML = ""; }, 950);
+    }, 1800 + lines.length * 2000 + 2000);
+  }
+
+  // 확장된 연출: 마지막 문장 전에 네 개의 숨은 에고를 넣고 오류·눈 팝업을 섮음
+  function endSequence3() {
+    clearTimers();
+    stopDrone();
+    const token = ++seqToken;
+    const at = (ms, fn) => setTimeout(() => { if (token === seqToken) fn(); }, ms);
+    const box = document.getElementById("ending");
+    box.innerHTML = "";
+    box.className = "ending on";
+    scanFlash();
+    crackle(0.8, 0.35);
+    darkBgm(22);
+    heartAccel(1100, 330, 16000);
+    hissTimer = setInterval(() => { if (Math.random() > 0.4) crackle(0.3, 0.18); }, 1200);
+
+    const eggIdx = [];
+    while (eggIdx.length < 1) {
+      const r = Math.floor(Math.random() * 110);
+      if (!eggIdx.includes(r)) eggIdx.push(r);
+    }
+
+    at(400, () => box.insertAdjacentHTML("beforeend", "<p class='ending-main'>시험 수고 하셨습니다.</p>"));
+    at(3800, () => {
+      const m = box.querySelector(".ending-main");
+      if (m) m.classList.add("out");
+    });
+    at(5600, () => { box.innerHTML = ""; blink(500); });
+
+    for (let i = 0; i < 14; i++) {
+      at(6400 + i * 200, () => {
+        addFloat(box, "집으로 돌아갈 수 있을 것 같아?", i);
+        if (i % 3 === 0) eerie(1.6);
+      });
+    }
+
+
+    at(11000, () => { blink(200); popEye(); });
+
+    for (let i = 0; i < 110; i++) {
+      at(11200 + i * 30, () => {
+        const isEgg = eggIdx.includes(i);
+        const text = isEgg ? "네" : (i % 7 === 6 ? "좀 더 빨리 집에 갈 수 있을 것 같아?" : "집으로 돌아갈 수 있을 것 같아?");
+        addFloat(box, text, i, i % 2 === 0);
+        if (isEgg) {
+          const el = box.lastElementChild;
+          el.style.fontSize = "9px";
+          el.style.color = "#2a2a2a";
+          el.style.left = "8%";
+          el.style.top = "6%";
+          el.style.textShadow = "none";
+          el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (token === seqToken) endingFinale();
+          });
+        }
+        if (i % 12 === 0) screech(0.3);
+        if (i % 15 === 14) popEye();
+        if (i % 25 === 12) laugh();
+        if (i % 40 === 30) scream();
+      });
+    }
+
+    at(14900, () => { blink(400); box.innerHTML = ""; eerie(3); });
+    for (let i = 0; i < 4; i++) {
+      at(15000 + i * 300, () => addFloat(box, "좀 더 빨리 집에 갈 수 있을 것 같아?", i, true));
+    }
+
+    at(17000, () => {
+      clearInterval(hissTimer);
+      clearTimeout(heartTimer);
+      box.innerHTML = "";
+      box.className = "ending";
+      showEnd();
+    });
+  }
+
+  function endSequence2() {
+    clearTimers();
+    stopDrone();
+    const box = document.getElementById("ending");
+    box.innerHTML = "";
+    box.className = "ending on";
+    scanFlash();
+    crackle(0.8, 0.35);
+    darkBgm(22);
+    heartAccel(1100, 330, 16000);
+    const hiss = setInterval(() => { if (Math.random() > 0.4) crackle(0.3, 0.18); }, 1200);
+
+    setTimeout(() => {
+      box.insertAdjacentHTML("beforeend", "<p class='ending-main'>시험 수고 하셨습니다.</p>");
+    }, 400);
+    setTimeout(() => {
+      const m = box.querySelector(".ending-main");
+      if (m) m.classList.add("out");
+    }, 3800);
+    setTimeout(() => { box.innerHTML = ""; blink(500); }, 5600);
+
+    for (let i = 0; i < 14; i++) {
+      setTimeout(() => {
+        addFloat(box, "집으로 돌아갈 수 있을 것 같아?", i);
+        if (i % 3 === 0) eerie(1.6);
+      }, 6400 + i * 200);
+    }
+
+    setTimeout(() => freezeError(box), 9100);
+
+    setTimeout(() => {
+      blink(200);
+      bloodDrips(box);
+    }, 11000);
+
+    for (let i = 0; i < 45; i++) {
+      setTimeout(() => {
+        const text = i % 7 === 6 ? "좋은 빠르게 집에 갈 수 있을 것 같아?" : "집으로 돌아갈 수 있을 것 같아?";
+        addFloat(box, text, i, i % 2 === 0);
+        if (i % 12 === 0) screech(0.3);
+      }, 11200 + i * 60);
+    }
+
+    setTimeout(() => {
+      blink(400);
+      box.innerHTML = "";
+      eerie(3);
+    }, 14400);
+
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        addFloat(box, "좋은 빠르게 집에 갈 수 있을 것 같아?", i, true);
+      }, 15000 + i * 300);
+    }
+
+    setTimeout(() => {
+      clearInterval(hiss);
+      clearTimeout(heartTimer);
+      box.innerHTML = "";
+      box.className = "ending";
+      showEnd();
+    }, 17000);
+  }
+
+  function endSequence() {
+    clearTimers();
+    stopDrone();
+    const box = document.getElementById("ending");
+    box.innerHTML = "";
+    box.className = "ending on";
+    scanFlash();
+    crackle(0.8, 0.35);
+    heartbeat();
+    const hb = setInterval(heartbeat, 800);
+
+    setTimeout(() => {
+      box.insertAdjacentHTML("beforeend", "<p class='ending-main'>시험 수고 하셨습니다.</p>");
+    }, 400);
+    setTimeout(() => {
+      const m = box.querySelector(".ending-main");
+      if (m) m.classList.add("out");
+    }, 3800);
+    setTimeout(() => { box.innerHTML = ""; blink(500); }, 5600);
+
+    for (let i = 0; i < 18; i++) {
+      setTimeout(() => {
+        addFloat(box, "집으로 돌아갈 수 있을 것 같아?", i);
+        if (i % 3 === 0) eerie(1.6);
+      }, 6400 + i * 170);
+    }
+
+    setTimeout(() => { blink(200); }, 11000);
+
+    for (let i = 0; i < 60; i++) {
+      setTimeout(() => {
+        addFloat(box, "집으로 돌아갈 수 있을 것 같아?", i, i % 2 === 0);
+        if (i === 0) eerie(4);
+        if (i % 12 === 0) screech(0.3);
+      }, 9900 + i * 60);
+    }
+
+    setTimeout(() => {
+      blink(400);
+      box.innerHTML = "";
+      eerie(3);
+    }, 14600);
+
+    setTimeout(() => {
+      clearInterval(hb);
+      box.innerHTML = "";
+      box.className = "ending";
+      showEnd();
+    }, 17000);
+  }
+
+  // 시험 후 검은 화면: 퇴근에 실패하는 연출 (문구가 나타나고 사라짐)
+  function flashWhite() {
+    const f = document.createElement("div");
+    f.style.cssText = "position:fixed;inset:0;background:#fff;z-index:45;opacity:0.85;pointer-events:none;";
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 90);
+  }
+
+  function endFail() {
+    clearTimers();
+    stopDrone();
+    const token = ++seqToken;
+    const at = (ms, fn) => setTimeout(() => { if (token === seqToken) fn(); }, ms);
+    const stage = document.createElement("div");
+    stage.style.cssText = "position:fixed;inset:0;background:#000;z-index:40;overflow:hidden;";
+    document.body.appendChild(stage);
+    darkBgm(30);
+    heartAccel(1100, 330, 24000);
+
+    const items = [
+      "집으로 돌아가는 데 실패했습니다.",
+      "퇴근 기록이 없습니다.",
+      "출입 기록: 없음",
+      "건물 내 인원: 1명 (확인되지 않음)",
+      "엘리베이터가 같은 층에서 멈쵥니다.",
+      "계단을 세는 소리가 들립니다.",
+      "당신의 이름이 여러 번 불리고 있습니다.",
+      "뒤를 돌아보지 마십시오.",
+      "집으로 돌아갈 수 있을 것 같아?",
+      "아무도 당신을 기다리지 않습니다."
+    ];
+    const fonts = ["'Noto Serif KR', serif", "'Noto Sans KR', sans-serif", "'Courier New', monospace", "Georgia, serif"];
+
+    items.forEach((text, i) => {
+      at(800 + i * 2300, () => {
+        const p = document.createElement("p");
+        const red = i % 3 === 2 || i === 7;
+        const big = i === 0 || i === items.length - 1;
+        p.textContent = text;
+        p.style.cssText = "position:absolute;left:" + (12 + Math.random() * 62) + "%;top:" + (14 + Math.random() * 66) + "%;transform:translate(-50%,-50%) rotate(" + ((Math.random() - 0.5) * 12) + "deg);margin:0;white-space:nowrap;font-family:" + fonts[Math.floor(Math.random() * fonts.length)] + ";font-size:" + (big ? 22 : 12 + Math.random() * 12) + "px;letter-spacing:0.08em;color:" + (red ? "#ff1a1a" : "#e8e2d6") + ";text-shadow:" + (red ? "0 0 10px #f00" : "none") + ";opacity:0;transition:opacity 0.6s ease;";
+        stage.appendChild(p);
+        requestAnimationFrame(() => { p.style.opacity = "1"; });
+        setTimeout(() => { p.textContent = corrupt(text, 0.3); }, 1000);
+        setTimeout(() => { p.textContent = text; }, 1150);
+        setTimeout(() => { p.style.opacity = "0"; }, 1900);
+        setTimeout(() => p.remove(), 2600);
+        if (i % 3 === 0) crackle(0.4, 0.2);
+        if (i % 4 === 1) screech(0.2);
+        if (i % 3 === 2) flashWhite();
+      });
+    });
+
+    at(800 + 3 * 2300 + 1200, () => jumpScare());
+    at(800 + 6 * 2300 + 600, () => popEye());
+    at(800 + 8 * 2300 + 1000, () => jumpScare());
+
+    at(800 + items.length * 2300 + 600, () => {
+      const last = document.createElement("p");
+      last.textContent = "사원님은 아직 퇴근하지 않았습니다.";
+      last.style.cssText = "position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;white-space:nowrap;font-family:'Noto Serif KR', serif;font-size:15px;letter-spacing:0.12em;color:#555;opacity:0;transition:opacity 2s ease;";
+      stage.appendChild(last);
+      requestAnimationFrame(() => { last.style.opacity = "1"; });
+    });
+
+    at(800 + items.length * 2300 + 4000, () => {
+      clearTimeout(heartTimer);
+      stage.innerHTML = "";
+    });
+  }
+
+  let envHidden = null;
+  let hiddenTimer = null;
+
+  function chord() {
+    try {
+      const ctx = getCtx();
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t + i * 0.12);
+        g.gain.exponentialRampToValueAtTime(0.09, t + i * 0.12 + 0.3);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 6);
+        o.connect(g).connect(ctx.destination);
+        o.start(t + i * 0.12);
+        o.stop(t + 6.1);
+      });
+    } catch (e) {}
+  }
+
+  // 히든 질문: 문자를 10초 동안 안 누르면 나타남
+  // 최종 합격 화면: 확인을 누르면 TV가 꺼짐
+  function passHidden(wrap) {
+    wrap.innerHTML = "";
+    wrap.style.background = "#f7f1e3";
+    wrap.style.justifyContent = "flex-start";
+    wrap.style.overflowY = "auto";
+    wrap.style.padding = "10vh 8vw 12vh";
+    wrap.style.transition = "background 1.5s ease";
+    const box = document.createElement("div");
+    box.style.cssText = "max-width:440px;width:100%;color:#3b2f22;font-family:'Noto Sans KR', sans-serif;font-size:14px;line-height:1.9;opacity:0;transition:opacity 2s ease;";
+    const paras = [
+      "안녕하십니까. 백일몰 주식회사 인사관리부입니다.",
+      "귀하는 최종 입사 적격성 평가 결과, 최종 합격하셨음을 안내드립니다.",
+      "당사의 새로운 구성원이 되신 것을 진심으로 환영합니다.",
+      "입사 일자 및 부서 배정에 관한 세부 사항은 추후 안내될 예정입니다.",
+      "아울러, 입사 전까지 아래 사항을 숙지해 주시기 바랍니다.",
+      "출근 시간과 장소는 별도 안내를 따르십시오.",
+      "본인의 이름을 부르는 소리가 들리더라도, 발신자가 확인되지 않았다면 응답하지 마십시오.",
+      "출근 안내 문자를 받기 전까지 회사에 방문하지 마십시오.",
+      "귀하의 입사를 진심으로 축하드립니다."
+    ];
+    paras.forEach((t) => {
+      const p = document.createElement("p");
+      p.textContent = t;
+      p.style.cssText = "margin:0 0 14px;";
+      box.appendChild(p);
+    });
+    const ok = document.createElement("button");
+    ok.textContent = "확인";
+    ok.style.cssText = "display:block;margin:26px auto 0;background:transparent;color:#3b2f22;border:1px solid #8a7a62;padding:10px 34px;font:inherit;font-size:14px;letter-spacing:0.15em;cursor:pointer;";
+    ok.addEventListener("click", () => powerOffFinal(wrap));
+    box.appendChild(ok);
+    wrap.appendChild(box);
+    requestAnimationFrame(() => { box.style.opacity = "1"; });
+    chord();
+  }
+
+  function powerOffFinal(wrap) {
+    const crt = document.createElement("div");
+    crt.className = "crt";
+    crt.style.zIndex = "60";
+    document.body.appendChild(crt);
+    tvOff();
+    setTimeout(() => {
+      wrap.innerHTML = "";
+      wrap.style.background = "#000";
+    }, 950);
+  }
+
+  function passHiddenOld(wrap) {
+    wrap.innerHTML = "";
+    wrap.style.background = "radial-gradient(ellipse at center, #fff8ea 0%, #f3e1c0 100%)";
+    wrap.style.transition = "background 1.5s ease";
+    const t = document.createElement("p");
+    t.textContent = "최종 합격";
+    t.style.cssText = "margin:0;font-family:'Noto Serif KR', serif;font-size:clamp(32px,10vw,46px);font-weight:500;letter-spacing:0.2em;color:#3b2f22;opacity:0;transition:opacity 2s ease;";
+    const s = document.createElement("p");
+    s.textContent = "백일몰 주식회사에 오신 것을 환영합니다.";
+    s.style.cssText = "margin:22px 0 0;font-family:'Noto Sans KR', sans-serif;font-size:14px;color:#6b5a44;opacity:0;transition:opacity 2s ease 1s;";
+    wrap.appendChild(t);
+    wrap.appendChild(s);
+    requestAnimationFrame(() => { t.style.opacity = "1"; s.style.opacity = "1"; });
+    chord();
+  }
+
+  function showHidden() {
+    clearTimers();
+    stopDrone();
+    clearTimeout(heartTimer);
+    clearInterval(hissTimer);
+    document.getElementById("sms").className = "sms";
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "position:fixed;inset:0;background:#000;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8vw;";
+    const q = document.createElement("p");
+    q.textContent = "사람의 최종 목적지는 무엇입니까?";
+    q.style.cssText = "margin:0 0 26px;font-family:'Noto Serif KR', serif;font-size:18px;letter-spacing:0.1em;color:#e8e2d6;text-align:center;line-height:1.8;";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.style.cssText = "width:min(80vw,320px);background:transparent;border:none;border-bottom:1px solid #555;color:#f2f2f2;font-size:18px;text-align:center;padding:8px;outline:none;font-family:inherit;";
+    const btn = document.createElement("button");
+    btn.textContent = "입력";
+    btn.style.cssText = "margin-top:24px;background:transparent;color:#ddd;border:1px solid #555;padding:10px 26px;font:inherit;font-size:14px;letter-spacing:0.15em;cursor:pointer;";
+    const msg = document.createElement("p");
+    msg.style.cssText = "margin:18px 0 0;color:#ff1a1a;font-size:13px;min-height:1.6em;";
+    const submit = () => {
+      if (input.value.replace(/\s/g, "") === "황홀") {
+        passHidden(wrap);
+      } else {
+        msg.textContent = "다시 입력하십시오.";
+        input.value = "";
+      }
+    };
+    btn.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    wrap.appendChild(q);
+    wrap.appendChild(input);
+    wrap.appendChild(btn);
+    wrap.appendChild(msg);
+    document.body.appendChild(wrap);
+    crackle(0.5, 0.25);
+  }
+
+  // 시험 후 실패 연출: 붉은 글씨 한 줄, 붉은 움직임, 이름님 찬양 문구 후 꺼짐
+  function endFail2() {
+    clearTimers();
+    stopDrone();
+    const token = ++seqToken;
+    const at = (ms, fn) => setTimeout(() => { if (token === seqToken) fn(); }, ms);
+    const stage = document.createElement("div");
+    stage.style.cssText = "position:fixed;inset:0;background:#000;z-index:40;overflow:hidden;";
+    document.body.appendChild(stage);
+    darkBgm(30);
+    heartAccel(1100, 330, 26000);
+
+    const items = [
+      "집으로 돌아가는 데 실패했습니다.",
+      "퇴근 기록이 없습니다.",
+      "출입 기록: 없음",
+      "건물 내 인원: 1명 (확인되지 않음)",
+      "엘리베이터가 같은 층에서 멈쵥니다.",
+      "계단을 세는 소리가 들립니다.",
+      "당신의 이름이 여러 번 불리고 있습니다.",
+      "뒤를 돌아보지 마십시오.",
+      "집으로 돌아갈 수 있을 것 같아?",
+      "아무도 당신을 기다리지 않습니다."
+    ];
+    const fonts = ["'Noto Serif KR', serif", "'Noto Sans KR', sans-serif", "'Courier New', monospace", "Georgia, serif"];
+
+    items.forEach((text, i) => {
+      at(800 + i * 2300, () => {
+        const p = document.createElement("p");
+        const red = i === 0 || i % 3 === 2 || i === 7;
+        const big = i === 0 || i === items.length - 1;
+        p.textContent = text;
+        p.style.cssText = "position:absolute;left:" + (12 + Math.random() * 62) + "%;top:" + (14 + Math.random() * 66) + "%;transform:translate(-50%,-50%) rotate(" + ((Math.random() - 0.5) * 12) + "deg);margin:0;white-space:nowrap;font-family:" + fonts[Math.floor(Math.random() * fonts.length)] + ";font-size:" + (big ? 22 : 12 + Math.random() * 12) + "px;letter-spacing:0.08em;color:" + (red ? "#ff1a1a" : "#e8e2d6") + ";text-shadow:" + (red ? "0 0 10px #f00" : "none") + ";opacity:0;transition:opacity 0.6s ease;";
+        stage.appendChild(p);
+        requestAnimationFrame(() => { p.style.opacity = "1"; });
+        setTimeout(() => { p.textContent = corrupt(text, 0.3); }, 1000);
+        setTimeout(() => { p.textContent = text; }, 1150);
+        setTimeout(() => { p.style.opacity = "0"; }, 1900);
+        setTimeout(() => p.remove(), 2600);
+        if (i % 3 === 0) crackle(0.4, 0.2);
+        if (i % 4 === 1) screech(0.2);
+        if (i % 3 === 2) flashWhite();
+      });
+    });
+
+    at(800 + 3 * 2300 + 1200, () => jumpScare());
+    at(800 + 6 * 2300 + 600, () => popEye());
+
+    // 붉은 화면 오버레이: 위에서 내려오는 붉은 질감의 움직임 (피 연출 없음)
+    at(15000, () => {
+      const wash = document.createElement("div");
+      wash.style.cssText = "position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(150,0,0,0.25) 0%, rgba(80,0,0,0.9) 100%);opacity:0;transition:opacity 2.5s ease;display:flex;align-items:center;justify-content:center;";
+      stage.appendChild(wash);
+      requestAnimationFrame(() => { wash.style.opacity = "1"; });
+      at(17000, () => {
+        const m = document.createElement("p");
+        m.textContent = "이름님을 찬양해야 해.";
+        m.style.cssText = "margin:0;font-family:'Noto Serif KR', serif;font-size:clamp(20px,6vw,28px);font-weight:700;letter-spacing:0.12em;color:#ff1a1a;text-shadow:0 0 14px #f00;opacity:0;transition:opacity 1.2s ease;";
+        wash.appendChild(m);
+        requestAnimationFrame(() => { m.style.opacity = "1"; });
+      });
+      at(20000, () => {
+        seqToken++;
+        clearTimeout(heartTimer);
+        const crt = document.createElement("div");
+        crt.className = "crt";
+        crt.style.zIndex = "60";
+        document.body.appendChild(crt);
+        tvOff();
+        setTimeout(() => { stage.innerHTML = ""; }, 950);
+      });
+    });
+  }
+
+  function showEnd() {
+    endFail2();
+  }
+
+  function showEndOld() {
+    clearTimers();
+    show("s4");
+    vignette.classList.add("on");
+    scanFlash();
+    blink(300);
+    document.getElementById("endBox").innerHTML =
+      "<p class='big'>응시가 완료되었습니다.</p>" +
+      "<p>귀하의 응답은 모두 기록되었습니다.</p>" +
+      "<p>정답은 없었습니다.</p>" +
+      "<p class='red creepy'>최종 평가가 종료되기 전까지 귀하는 합격자가 아닌, 합격 예정자입니다.</p>" +
+      "<p class='faint'>이 화면을 벗어나더라도 평가는 종료되지 않습니다.</p>" +
+      "<p class='faint'>당신이 앉아 있는 자리는 원래 비어 있었습니다.</p>";
+    crackle(0.8, 0.35);
+    setTimeout(() => { blink(400); heartbeat(); }, 2500);
+    stopDrone();
+    setTimeout(jumpScare, 4000);
+  }
+</script>
+</body>
+</html>
